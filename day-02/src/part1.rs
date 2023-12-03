@@ -17,6 +17,8 @@ struct Game {
     tirages: Vec<CubeSet>,
 }
 
+// /^Game (\d+):(( (\d+) (red|green|blue),?)+;?)+/mg
+
 #[tracing::instrument]
 pub fn process(input: &str) -> miette::Result<u32, AocError> {
     let result = input
