@@ -20,7 +20,7 @@ impl ScratchCard {
     pub fn get_winning(&self) -> HashSet<u32> {
         self.scratched
             .intersection(&self.winning)
-            .cloned()
+            .copied()
             .collect::<HashSet<u32>>()
     }
 
