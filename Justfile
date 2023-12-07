@@ -1,5 +1,5 @@
 work day part:
-    cargo watch --clear -x "check -p {{day}}" -s "just test {{part}} -p {{day}}" -s "just lint {{day}}" -s "just bench {{day}} {{part}}" #-s "just flamegraph {{day}} {{part}}"
+    cargo watch --clear -x "check -p {{day}}" -s "just test {{part}} -p {{day}}" -s "just lint {{day}}" -s "just bench {{day}} {{part}}" -s "just flamegraph {{day}} {{part}}"
 
 www-watch:
    RUST_LOG=info cargo +nightly leptos watch --project www
