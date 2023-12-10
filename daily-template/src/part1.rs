@@ -27,7 +27,7 @@ mod tests {
     fn test_process() -> miette::Result<()> {
         todo!("haven't built test yet");
         let input = "";
-        assert_eq!((), process(input)?);
+        assert_eq!(0, process(input)?);
         Ok(())
     }
 }
