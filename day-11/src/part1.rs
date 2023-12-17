@@ -26,8 +26,7 @@ impl Element {
 #[derive(Debug)]
 struct Image {
     array: Array2<Element>,
-    empty_rows: Vec<usize>,
-    empty_cols: Vec<usize>,
+    empty: [Vec<usize>; 2],
     galaxies: Vec<[usize; 2]>,
 }
 
@@ -43,22 +42,21 @@ impl Image {
 
         Self {
             array: matrix,
-            empty_rows,
-            empty_cols,
+            empty: [empty_rows, empty_cols],
             galaxies,
         }
     }
 
-    fn distance(&self, a: [usize; 2], b: [usize; 2]) -> usize {
-        let d = a
-            .into_iter()
+    fn distance(&self, a: &[usize; 2], b: &[usize; 2]) -> usize {
+        a.iter()
             .zip(b)
-            .map(|(x_a, x_b)| {
+            .zip(self.empty.iter())
+            .map(|((&x_a, &x_b), empty)| {
                 let range = if x_a >= x_b { x_a..x_b } else { x_b..x_a };
+                let empty_steps = empty.iter().filter(|i| range.contains(i)).count();
+                range.len() + empty_steps
             })
-            .sum();
-
-        0
+            .sum()
     }
 }
 
@@ -99,6 +97,14 @@ fn parse_image(input: &str) -> IResult<&str, Image> {
 #[tracing::instrument]
 pub fn process(input: &str) -> miette::Result<u32, AocError> {
     let (_, image) = dbg!(parse_image(input).expect("Test input should parse!"));
+    let distances = dbg!(image
+        .galaxies
+        .iter()
+        .enumerate()
+        .flat_map(move |(i, a)| image.galaxies[(i + 1)..]
+            .iter()
+            .map(move |b| image.distance(&a, &b)))
+        .collect_vec());
 
     Ok(0)
 }
