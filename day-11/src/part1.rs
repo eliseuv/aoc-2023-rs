@@ -26,7 +26,7 @@ impl Element {
 #[derive(Debug)]
 struct Image {
     array: Array2<Element>,
-    empty: [Vec<usize>; 2],
+    empty_lanes: [Vec<usize>; 2],
     galaxies: Vec<[usize; 2]>,
 }
 
@@ -42,7 +42,7 @@ impl Image {
 
         Self {
             array: matrix,
-            empty: [empty_rows, empty_cols],
+            empty_lanes: [empty_rows, empty_cols],
             galaxies,
         }
     }
@@ -50,11 +50,12 @@ impl Image {
     fn distance(&self, a: &[usize; 2], b: &[usize; 2]) -> usize {
         a.iter()
             .zip(b)
-            .zip(self.empty.iter())
+            .zip(&self.empty_lanes)
             .map(|((&x_a, &x_b), empty)| {
-                let range = if x_a >= x_b { x_a..x_b } else { x_b..x_a };
-                let empty_steps = empty.iter().filter(|i| range.contains(i)).count();
-                range.len() + empty_steps
+                let coord_range = if x_a <= x_b { x_a..x_b } else { x_b..x_a };
+                let coord_distance = coord_range.len();
+                let inflated_space = empty.iter().filter(|i| coord_range.contains(i)).count();
+                coord_distance + inflated_space
             })
             .sum()
     }
@@ -95,18 +96,18 @@ fn parse_image(input: &str) -> IResult<&str, Image> {
 }
 
 #[tracing::instrument]
-pub fn process(input: &str) -> miette::Result<u32, AocError> {
-    let (_, image) = dbg!(parse_image(input).expect("Test input should parse!"));
-    let distances = dbg!(image
+pub fn process(input: &str) -> miette::Result<usize, AocError> {
+    let (_, image) = parse_image(input).expect("Test input should parse!");
+    // Iterate on every pair and calcuate the distance, then sum
+    let result = image
         .galaxies
         .iter()
         .enumerate()
-        .flat_map(move |(i, a)| image.galaxies[(i + 1)..]
-            .iter()
-            .map(move |b| image.distance(&a, &b)))
-        .collect_vec());
+        .flat_map(|(i, a)| image.galaxies[(i + 1)..].iter().map(move |b| (a, b)))
+        .map(|(a, b)| image.distance(a, b))
+        .sum();
 
-    Ok(0)
+    Ok(result)
 }
 
 #[cfg(test)]
