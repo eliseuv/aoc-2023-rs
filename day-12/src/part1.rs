@@ -7,7 +7,7 @@ use nom::{
     IResult,
 };
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum State {
     Operational,
     Damaged,
@@ -20,6 +20,13 @@ impl State {
             '#' => Some(Self::Damaged),
             '?' => None,
             _ => panic!("Unrecognized character!"),
+        }
+    }
+
+    fn matches(&self, s: &Option<State>) -> bool {
+        match s {
+            None => true,
+            Some(x) => self == x,
         }
     }
 }
@@ -44,12 +51,12 @@ struct Record {
 }
 
 impl Record {
-    fn new(damaged_record: DamagedRecord) -> Self {
+    fn new(damaged_record: &DamagedRecord) -> Self {
         let grouping = damaged_record.grouping.clone();
         let n = grouping.len() + 1;
         let mut fill = vec![1; n];
         fill[0] = 0;
-        fill[n - 1] = damaged_record.state.len() - grouping.iter().sum::<usize>() - (n - 1);
+        fill[n - 1] = damaged_record.state.len() - grouping.iter().sum::<usize>() - n + 2;
 
         Self { grouping, fill }
     }
@@ -59,7 +66,16 @@ impl Record {
     }
 
     fn state(&self) -> Vec<State> {
-        todo!()
+        self.grouping
+            .iter()
+            .zip(self.fill.iter())
+            .flat_map(|(g, f)| {
+                vec![State::Operational; *f]
+                    .into_iter()
+                    .chain(vec![State::Damaged; *g])
+            })
+            .chain(vec![State::Operational; *self.fill.last().unwrap()])
+            .collect()
     }
 }
 
@@ -82,7 +98,9 @@ fn parse_record(input: &str) -> IResult<&str, DamagedRecord> {
 
 #[tracing::instrument]
 pub fn process_line(line: &str) -> miette::Result<usize, AocError> {
-    let (_, springs) = dbg!(parse_record(line).unwrap());
+    let (_, damaged_record) = dbg!(parse_record(line).unwrap());
+    let record = Record::new(&damaged_record);
+    assert_eq!(record.len(), damaged_record.state.len());
 
     Ok(0)
 }
