@@ -39,18 +39,12 @@ struct DamagedRecord {
 }
 
 #[derive(Debug)]
-enum GroupState {
-    Operation(usize),
-    Damaged(usize),
-}
-
-#[derive(Debug)]
-struct Record {
+struct RecordCandidate {
     grouping: Vec<usize>,
     fill: Vec<usize>,
 }
 
-impl Record {
+impl RecordCandidate {
     fn new(damaged_record: &DamagedRecord) -> Self {
         let grouping = damaged_record.grouping.clone();
         let n = grouping.len() + 1;
@@ -99,7 +93,7 @@ fn parse_record(input: &str) -> IResult<&str, DamagedRecord> {
 #[tracing::instrument]
 pub fn process_line(line: &str) -> miette::Result<usize, AocError> {
     let (_, damaged_record) = dbg!(parse_record(line).unwrap());
-    let record = Record::new(&damaged_record);
+    let record = RecordCandidate::new(&damaged_record);
     assert_eq!(record.len(), damaged_record.state.len());
 
     Ok(0)
